@@ -82,7 +82,7 @@ pub extern "stdcall" fn group_message_handler(sub_type: i32,
         // ore result
 
         if group_num == 613604130 {
-            let regex = Regex::new("ore(:|：)\\s*(.+)").unwrap();
+            let regex = Regex::new("^ore(:|：)\\s*(.+)$").unwrap();
             if let Some(par) = regex.captures(&message).and_then(|c| c.get(2)).map(|m| m.as_str()) {
                 let text = format!("正在从 Ore 上检索 {} 的相关信息，请稍安勿躁。", par);
                 cqpapi::CQ_sendGroupMsg(auth_code, group_num, gbk!(&text));
