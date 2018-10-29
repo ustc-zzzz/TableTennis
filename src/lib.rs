@@ -11,10 +11,11 @@ use cqpsdk::cqpapi;
 use encoding::{DecoderTrap, EncoderTrap, Encoding};
 use encoding::all::GBK;
 use regex::Regex;
-use reqwest::Client;
+use reqwest::ClientBuilder;
 use serde_json::Value;
 use std::ffi::{CStr, CString};
 use std::sync::RwLock;
+use std::time::Duration;
 use url::Url;
 
 macro_rules! gbk {
@@ -116,8 +117,9 @@ fn fetch_ore_result(par: &str) -> String {
     let mut url = Url::parse("https://ore.spongepowered.org/api/v1/projects").unwrap();
     url.query_pairs_mut().append_pair("q", &par.replace("ljyys", "yinyangshi")).append_pair("sort", "1");
 
-    let get_res = || Client::new().get(url.clone()).send().and_then(|mut res| res.json::<Vec<Value>>()).ok();
-    let res_option = None.or_else(&get_res).or_else(&get_res).or_else(&get_res);
+    let client = ClientBuilder::new().timeout(Duration::from_secs(15)).build().expect("Failed to init client");
+    let get_res = || client.clone().get(url.clone()).send().and_then(|mut res| res.json::<Vec<Value>>()).ok();
+    let res_option = None.or_else(&get_res).or_else(&get_res).or_else(&get_res).or_else(&get_res);
 
     res_option.map_or("网络是不是出问题了？".to_owned(), |list| if let Some(Value::Object(map)) = list.get(0) {
         let owner = map.get("owner")
