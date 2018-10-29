@@ -1,0 +1,30 @@
+{
+  "ret": 1,
+  "apiver": 9,
+  "name": "TableTennis",
+  "appid": "com.github.ustc_zzzz.table_tennis",
+  "version_id": 1,
+  "version": "0.1.0",
+  "author": "ustc_zzzz",
+  "description": "The ping-pong table tennis",
+  "event": [
+    {
+      "id": 1,
+      "type": 21,
+      "name": "PrivateMessageHandler",
+      "function": "PrivateMessageHandler",
+      "priority": 30000
+    },
+    {
+      "id": 2,
+      "type": 2,
+      "name": "GroupMessageHandler",
+      "function": "GroupMessageHandler",
+      "priority": 20000
+    }
+  ],
+  "auth": [
+    101,
+    106
+  ]
+}
