@@ -114,43 +114,39 @@ fn ping_to_pong(ping: &str) -> Vec<String> {
 
 fn fetch_ore_result(par: &str) -> String {
     let mut url = Url::parse("https://ore.spongepowered.org/api/v1/projects").unwrap();
-    url.query_pairs_mut().append_pair("q", par).append_pair("sort", "1");
-    let client = Client::new().get(url);
-    if let Ok(mut res) = client.send() {
-        match res.json::<Value>() {
-            Ok(Value::Array(list)) => if let Some(Value::Object(map)) = list.get(0) {
-                let owner = map.get("owner")
-                    .and_then(|v| v.as_str())
-                    .map(|v| v.replace("yinyangshi", "ljyys"))
-                    .unwrap_or("unknown".to_owned());
-                let name = map.get("name")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("unknown");
-                let date = map.get("recommended")
-                    .and_then(|v| v.as_object())
-                    .and_then(|v| v.get("createdAt"))
-                    .and_then(|v| v.as_str())
-                    .map(|v| &v[0..10])
-                    .unwrap_or("unknown");
-                let version = map.get("recommended")
-                    .and_then(|v| v.as_object())
-                    .and_then(|v| v.get("name"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("unknown");
-                let link = map.get("recommended")
-                    .and_then(|v| v.as_object())
-                    .and_then(|v| v.get("href"))
-                    .and_then(|v| v.as_str())
-                    .map(|v| format!("https://ore.spongepowered.org{}", v))
-                    .unwrap_or("unknown".to_owned());
-                format!("找到和 {} 有关的插件啦！\n插件名称：{}\n插件作者：{}\n推荐版本：{}\n更新日期：{}\n下载链接：{}",
-                        par, name, owner, version, date, link)
-            } else {
-                format!("没有在 Ore 平台找到和 {} 有关的插件。", par)
-            },
-            _ => "网络是不是出问题了？".to_owned(),
-        }
+    url.query_pairs_mut().append_pair("q", &par.replace("ljyys", "yinyangshi")).append_pair("sort", "1");
+
+    let get_res = || Client::new().get(url.clone()).send().and_then(|mut res| res.json::<Vec<Value>>()).ok();
+    let res_option = None.or_else(&get_res).or_else(&get_res).or_else(&get_res);
+
+    res_option.map_or("网络是不是出问题了？".to_owned(), |list| if let Some(Value::Object(map)) = list.get(0) {
+        let owner = map.get("owner")
+            .and_then(|v| v.as_str())
+            .map(|v| v.replace("yinyangshi", "ljyys"))
+            .unwrap_or("unknown".to_owned());
+        let name = map.get("name")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown");
+        let date = map.get("recommended")
+            .and_then(|v| v.as_object())
+            .and_then(|v| v.get("createdAt"))
+            .and_then(|v| v.as_str())
+            .map(|v| &v[0..10])
+            .unwrap_or("unknown");
+        let version = map.get("recommended")
+            .and_then(|v| v.as_object())
+            .and_then(|v| v.get("name"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown");
+        let link = map.get("recommended")
+            .and_then(|v| v.as_object())
+            .and_then(|v| v.get("href"))
+            .and_then(|v| v.as_str())
+            .map(|v| format!("https://ore.spongepowered.org{}", v))
+            .unwrap_or("unknown".to_owned());
+        format!("找到和 {} 有关的插件啦！\n插件名称：{}\n插件作者：{}\n推荐版本：{}\n更新日期：{}\n下载链接：{}",
+                par, name, owner, version, date, link)
     } else {
-        "网络是不是出问题了？".to_owned()
-    }
+        format!("没有在 Ore 平台找到和 {} 有关的插件。", par)
+    })
 }
